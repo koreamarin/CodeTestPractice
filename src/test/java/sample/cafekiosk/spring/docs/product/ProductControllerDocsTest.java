@@ -101,34 +101,4 @@ public class ProductControllerDocsTest extends RestDocsSupport {
                         )
                 ));
     }
-
-    @DisplayName("신규 상품을 등록하는 API")
-    @Test
-    void createProduct1() throws Exception {
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .type(HANDMADE)
-                .sellingStatus(SELLING)
-                .name("아메리카노")
-                .price(4000)
-                .build();
-
-        given(productService.createProduct(any(ProductCreateServiceRequest.class)))
-                .willReturn(ProductResponse.builder()   // 문서에서 보여주고 싶은 response 객체를 만들어줌. type에 맞는 아무 값이나 넣어도 됨.
-                        .id(1L)
-                        .productNumber("001")
-                        .type(HANDMADE)
-                        .sellingStatus(SELLING)
-                        .name("아메리카노")
-                        .price(4000)
-                        .build()
-                );
-
-        mockMvc.perform(
-                        post("/api/v1/products/new")
-                                .content(objectMapper.writeValueAsString(request))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andDo(print())       // 자세한 로그 볼때 쓰는 함수. 꼭 안써도 되긴함
-                .andExpect(status().isOk());
-    }
 }
