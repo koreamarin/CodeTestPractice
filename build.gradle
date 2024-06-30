@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.0'
 	id 'io.spring.dependency-management' version '1.1.5'
+	id 'org.asciidoctor.jvm.convert' version '3.3.2'		// asciidoctor에 대한 플러그인 추가
 }
 
 group = 'sample'
@@ -15,6 +16,7 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	asciidoctorExt		// asciidoctor에 대한 의존성 추가
 }
 
 repositories {
@@ -25,6 +27,7 @@ dependencies {
 	// spring boot
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	// lombok
 	compileOnly 'org.projectlombok:lombok'
@@ -35,10 +38,51 @@ dependencies {
 
 	// test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// Guava
+	implementation("com.google.guava:guava:33.2.1-jre")
+
+	// RestDocs
+	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+ext {	// 전역 변수
+	/*
+ 		snippetsDir 전역 변수를 추가하여 build/generated-snippets 디렉토리를 생성.
+ 		빌드를 실행하면 build/generated-snippets 디렉토리가 생성되고 테스트 결과 문서가 나오면 이 디렉토리에 저장됨
+ 	*/
+	snippetsDir = file('build/generated-snippets')
+}
+
+test {	// 테스트 실행 시 snippetsDir 디렉토리를 생성. 이 디렉토리에 테스트 결과 문서가 저장됨
+	outputs.dir snippetsDir
+}
+
+asciidoctor {
+	/*
+		asciidoctor 작업을 실행할 때 snippetsDir 디렉토리를 참조하도록 설정
+		asciidoctor 작업을 실행하면 test 작업이 먼저 실행되고, test 결과가 snippetsDir 디렉토리에 저장됨
+		그리고 asciidoctor 작업이 실행되고, asciidoctor가 snippetsDir 디렉토리에 있는 테스트 결과 문서를 참조하여 문서를 생성함
+		그 문서는 static/docs 디렉토리에 저장됨
+	 */
+	inputs.dir snippetsDir
+	configurations 'asciidoctorExt'
+
+	sources {	// 특정 파일만 html로 만듦. index.adoc 파일만 html로 만듦
+		include("**/index.adoc")
+	}
+	baseDirFollowsSourceFile()	// 다른 adoc 파일을 include할 때, include할 파일의 경로를 baseDir로 설정하여 include할 파일을 찾을 수 있도록 함
+	dependsOn test	// asciidoctor 작업은 test 작업이 선행되어야 함. test 작업이 끝나면 asciidoctor 작업이 실행됨. 의존성이 있다는 것을 명시
+}
+
+bootJar {
+	dependsOn asciidoctor	// asciiDoctor 작업이 선행되어야 함. asciiDoctor 작업이 끝나면 bootJar 작업이 실행됨. 의존성이 있다는 것을 명시
+	from("${asciidoctor.outputDir}") {
+		into 'static/docs'
+	}
 }
