@@ -3,6 +3,7 @@ package sample.cafekiosk.spring.api.controller.product;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -176,8 +177,7 @@ public class ProductControllerTest extends ControllerTestSupport {
     @Test
     void getSellingProducts() throws Exception {
         // given
-        List<ProductResponse> result = List.of();
-        when(productService.getSellingProducts()).thenReturn(result);
+
 
         // when // then
         mockMvc.perform(
